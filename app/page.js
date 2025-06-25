@@ -1,7 +1,11 @@
+import Carousel from './components/Carousel';
+
+
 export default function Home() {
   return (
     <>
-    <h1 className="text-4xl text-center font-serif text-red-600">Home Page</h1>
+    <Carousel />
+    <h1 className="text-4xl text-center font-serif text-green-600">Home Page</h1>
     </>
   );
 }
