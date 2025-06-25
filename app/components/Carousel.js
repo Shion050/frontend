@@ -14,7 +14,7 @@ export default function Carousel() {
       <Image src="/images/sliders/s1.jpg" className="d-block w-100" alt="..." width={1660} height={690}/>
     </div>
     <div className="carousel-item">
-      <Image src="/images/sliders/s02.png" className="d-block w-100" alt="..." width={1660} height={690}/>
+      <Image src="/images/sliders/Gp1.jpg" className="d-block w-100" alt="..." width={1660} height={690}/>
     </div>
     <div className="carousel-item">
       <Image src="/images/sliders/s03.png" className="d-block w-100" alt="..." width={1660} height={690}/>
