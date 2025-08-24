@@ -1,255 +1,251 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from "react";
+import { useState } from 'react';
 import Swal from 'sweetalert2';
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter } from 'next/navigation';
+import Head from 'next/head';
 
-export default function RegisterPage() {
-  const [fadeIn, setFadeIn] = useState(false);
-  const [focusedInput, setFocusedInput] = useState(null);
-  const [showPassword, setShowPassword] = useState(false);
-  const [acceptedTerms, setAcceptedTerms] = useState(false);
-  const [prefix, setPrefix] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-
+export default function Register() {
   const router = useRouter();
 
-  useEffect(() => {
-    setFadeIn(true);
-  }, []);
+  const [title, setTitle] = useState('');
+  const [firstname, setFirstname] = useState('');
+  const [lastname, setLastname] = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [address, setAddress] = useState('');
+  const [sex, setSex] = useState('');
+  const [birthday, setBirthday] = useState('');
+  const [agree, setAgree] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!username.trim() || !password.trim() || !prefix || !firstName.trim() || !lastName.trim() || !acceptedTerms) {
-      Swal.fire({
-        icon: "warning",
-        title: "ข้อมูลไม่ครบ!",
-        text: "กรุณากรอกข้อมูลให้ครบถ้วนและยอมรับเงื่อนไข",
-        confirmButtonColor: "#0d6efd",
+    if (!agree) {
+      return Swal.fire({
+        icon: 'warning',
+        title: 'กรุณายอมรับเงื่อนไข',
       });
-      return;
     }
 
-    Swal.fire({
-      icon: "success",
-      title: "สมัครสมาชิกสำเร็จ!",
-      html: `
-        <b>ชื่อผู้ใช้:</b> ${username}<br/>
-        <b>คำนำหน้า:</b> ${prefix}<br/>
-        <b>ชื่อ:</b> ${firstName} ${lastName}<br/>
-        <b>ยอมรับเงื่อนไข:</b> ใช่
-      `,
-      confirmButtonColor: "#0d6efd",
-    }).then(() => {
-      router.push("/login");
-    });
-  };
+    // fullname ตาม format ที่ใช้งานใน API
+    const fullname = `${firstname} `;
 
-  // แก้ไขไม่ใช้ shorthand border ให้แยกเป็น 3 properties แทน
-  const baseInputStyle = {
-    width: "100%",
-    padding: 8,
-    marginBottom: 12,
-    borderWidth: "1.5px",
-    borderStyle: "solid",
-    borderColor: "#ccc",
-    borderRadius: 4,
-    fontSize: 16,
-    transition: "border-color 0.3s, box-shadow 0.3s",
-  };
+    try {
+      const res = await fetch('https://backend-nextjs-virid.vercel.app/api/users', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title,          // ยังส่งคำนำหน้าแยกไปด้วย เผื่อ API ต้องการเก็บไว้
+          firstname,      // ชื่อจริงอย่างเดียว
+          lastname,
+          fullname,       // รวมชื่อกับนามสกุล (ไม่มีคำนำหน้า)
+          username,
+          password,
+          address,
+          sex,
+          birthday,
+        }),
+      });
 
-  const focusInputStyle = {
-    borderColor: "#0d6efd",
-    boxShadow: "0 0 8px rgba(13, 110, 253, 0.5)",
-    outline: "none",
-  };
+      const result = await res.json();
+      console.log(result);
 
-  const buttonStyle = {
-    width: "100%",
-    padding: 12,
-    fontSize: 18,
-    backgroundColor: "#0d6efd",
-    color: "white",
-    border: "none",
-    borderRadius: 6,
-    cursor: "pointer",
-    fontWeight: "600",
-    transition: "background-color 0.3s, transform 0.1s",
-    userSelect: "none",
-  };
+      if (res.ok) {
+        Swal.fire({
+          icon: 'success',
+          title: '<h3>บันทึกข้อมูลเรียบร้อยแล้ว</h3>',
+          showConfirmButton: false,
+          timer: 2000,
+        }).then(() => {
+          router.push('/login');  // เปลี่ยนเป็น /login ให้ตรงกับหน้า login ของคุณ
+        });
 
-  const buttonHoverStyle = {
-    backgroundColor: "#084bcc",
+        // Reset form
+        setTitle('');
+        setFirstname('');
+        setLastname('');
+        setUsername('');
+        setPassword('');
+        setAddress('');
+        setSex('');
+        setBirthday('');
+        setAgree(false);
+      } else {
+        Swal.fire({
+          title: 'Error!',
+          text: result.message || 'เกิดข้อผิดพลาด!',
+          icon: 'error',
+          confirmButtonText: 'ตกลง',
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'ข้อผิดพลาดเครือข่าย',
+        text: 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้',
+      });
+    }
   };
 
   return (
-    <div
-      style={{
-        position: "relative",
-        height: "100vh",
-        width: "100%",
-        backgroundImage: 'url("/images/silders/bg.jpg")',
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        opacity: fadeIn ? 1 : 0,
-        transition: "opacity 1s ease-in",
-      }}
-    >
-      <main
-        style={{
-          width: "100%",
-          maxWidth: 400,
-          padding: "2rem",
-          borderRadius: 12,
-          backgroundColor: "rgba(175, 175, 175, 0.95)",
-          boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
-          userSelect: "none",
-        }}
-      >
-        <h1 style={{ textAlign: "center", color: "#0d6efd", marginBottom: "1.5rem" }}>
-          สมัครสมาชิก
-        </h1>
+    <>
+      <Head>
+        <title>สมัครสมาชิก</title>
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+        />
+      </Head>
 
-        <form onSubmit={handleSubmit} noValidate>
-          {/* Username */}
-          <label htmlFor="username">ชื่อผู้ใช้</label>
-          <input
-            type="text"
-            id="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder="กรอกชื่อผู้ใช้"
-            style={{ ...baseInputStyle, ...(focusedInput === "username" ? focusInputStyle : {}) }}
-            onFocus={() => setFocusedInput("username")}
-            onBlur={() => setFocusedInput(null)}
-            required
-          />
+      <div className="container mt-5">
+        <div className="row justify-content-center">
+          <div className="col-md-6 col-lg-5">
+            <div className="card shadow rounded-4">
+              <div className="card-body">
+                <h3 className="text-center mb-4">สมัครสมาชิก</h3>
+                <form onSubmit={handleSubmit}>
+                  {/* Username */}
+                  <div className="mb-3">
+                    <label className="form-label">ชื่อผู้ใช้</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      required
+                    />
+                  </div>
 
-          {/* Password */}
-          <label htmlFor="password">รหัสผ่าน</label>
-          <div style={{ position: "relative", marginBottom: 12 }}>
-            <input
-              type={showPassword ? "text" : "password"}
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="กรอกรหัสผ่าน"
-              style={{
-                ...baseInputStyle,
-                paddingRight: 40,
-                ...(focusedInput === "password" ? focusInputStyle : {}),
-              }}
-              onFocus={() => setFocusedInput("password")}
-              onBlur={() => setFocusedInput(null)}
-              required
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              aria-label={showPassword ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}
-              style={{
-                position: "absolute",
-                right: 8,
-                top: "50%",
-                transform: "translateY(-50%)",
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                color: "#0d6efd",
-                fontSize: 20,
-                userSelect: "none",
-              }}
-              tabIndex={-1}
-            >
-              {showPassword ? "🙈" : "👁️"}
-            </button>
+                  {/* Password */}
+                  <div className="mb-3">
+                    <label className="form-label">รหัสผ่าน</label>
+                    <input
+                      type="password"
+                      className="form-control"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  {/* คำนำหน้า */}
+                  <div className="mb-3">
+                    <label className="form-label">คำนำหน้าชื่อ</label>
+                    <select
+                      className="form-select"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      required
+                    >
+                      <option value="">เลือก...</option>
+                      <option value="นาย">นาย</option>
+                      <option value="นาง">นาง</option>
+                      <option value="นางสาว">นางสาว</option>
+                    </select>
+                  </div>
+
+                  {/* ชื่อ และ นามสกุล */}
+                  <div className="row">
+                    <div className="col-md-6 mb-3">
+                      <label className="form-label">ชื่อ</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={firstname}
+                        onChange={(e) => setFirstname(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="col-md-6 mb-3">
+                      <label className="form-label">นามสกุล</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={lastname}
+                        onChange={(e) => setLastname(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* ที่อยู่ */}
+                  <div className="mb-3">
+                    <label className="form-label">ที่อยู่</label>
+                    <textarea
+                      className="form-control"
+                      style={{ height: 100 }}
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                    />
+                  </div>
+
+                  {/* เพศ */}
+                  <div className="mb-3">
+                    <label className="form-label">เพศ</label>
+                    <div className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="radio"
+                        name="sex"
+                        value="ชาย"
+                        checked={sex === 'ชาย'}
+                        onChange={(e) => setSex(e.target.value)}
+                      />
+                      <label className="form-check-label">ชาย</label>
+                    </div>
+                    <div className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="radio"
+                        name="sex"
+                        value="หญิง"
+                        checked={sex === 'หญิง'}
+                        onChange={(e) => setSex(e.target.value)}
+                      />
+                      <label className="form-check-label">หญิง</label>
+                    </div>
+                  </div>
+
+                  {/* วันเกิด */}
+                  <div className="mb-3">
+                    <label className="form-label">วันเกิด</label>
+                    <input
+                      type="date"
+                      className="form-control"
+                      value={birthday}
+                      onChange={(e) => setBirthday(e.target.value)}
+                    />
+                  </div>
+
+                  {/* ยอมรับเงื่อนไข */}
+                  <div className="form-check mb-3">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      checked={agree}
+                      onChange={(e) => setAgree(e.target.checked)}
+                    />
+                    <label className="form-check-label">
+                      ยอมรับเงื่อนไขและข้อตกลง
+                    </label>
+                  </div>
+
+                  {/* Submit */}
+                  <div className="d-grid mb-3">
+                    <button type="submit" className="btn btn-primary">
+                      สมัครสมาชิก
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
           </div>
-
-          {/* Prefix */}
-          <label htmlFor="prefix">คำนำหน้า</label>
-          <select
-            id="prefix"
-            value={prefix}
-            onChange={(e) => setPrefix(e.target.value)}
-            style={{ ...baseInputStyle, backgroundColor: "white", cursor: "pointer" }}
-            required
-          >
-            <option value="">-- กรุณาเลือก --</option>
-            <option value="นาย">นาย</option>
-            <option value="นาง">นาง</option>
-            <option value="นางสาว">นางสาว</option>
-          </select>
-
-          {/* First Name */}
-          <label htmlFor="firstName">ชื่อ</label>
-          <input
-            type="text"
-            id="firstName"
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-            placeholder="กรอกชื่อ"
-            style={{ ...baseInputStyle, ...(focusedInput === "firstName" ? focusInputStyle : {}) }}
-            onFocus={() => setFocusedInput("firstName")}
-            onBlur={() => setFocusedInput(null)}
-            required
-          />
-
-          {/* Last Name */}
-          <label htmlFor="lastName">นามสกุล</label>
-          <input
-            type="text"
-            id="lastName"
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-            placeholder="กรอกนามสกุล"
-            style={{ ...baseInputStyle, ...(focusedInput === "lastName" ? focusInputStyle : {}) }}
-            onFocus={() => setFocusedInput("lastName")}
-            onBlur={() => setFocusedInput(null)}
-            required
-          />
-
-          {/* Checkbox */}
-          <label style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
-            <input
-              type="checkbox"
-              checked={acceptedTerms}
-              onChange={(e) => setAcceptedTerms(e.target.checked)}
-              required
-              style={{ marginRight: 8 }}
-            />
-            ยอมรับเงื่อนไข
-          </label>
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            style={buttonStyle}
-            onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.95)")}
-            onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
-            onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
-            onMouseOver={(e) => (e.currentTarget.style.backgroundColor = buttonHoverStyle.backgroundColor)}
-            onMouseOut={(e) => (e.currentTarget.style.backgroundColor = buttonStyle.backgroundColor)}
-          >
-            สมัครสมาชิก
-          </button>
-
-          {/* Back to Login */}
-          <div style={{ marginTop: 16, textAlign: "center" }}>
-            <Link href="/login" style={{ color: "#0d6efd", textDecoration: "underline" }}>
-              กลับไปที่หน้าเข้าสู่ระบบ
-            </Link>
-          </div>
-        </form>
-      </main>
-    </div>
+        </div>
+      </div>
+    </>
   );
 }
